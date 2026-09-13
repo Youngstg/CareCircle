@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+coverage
+tests
+supabase
+npm-debug.log*
+*.pem
+*.tsbuildinfo
+minio-data
+.minio
+README.md
+IMPLEMENTATION.md

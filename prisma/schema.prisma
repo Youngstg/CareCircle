@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum CircleRole {
+  OWNER
+  COORDINATOR
+  MEMBER
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid()) @db.VarChar(191)
+  name          String    @db.VarChar(191)
+  email         String    @unique @db.VarChar(191)
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  circleMemberships  CircleMember[]
+  createdCircles     CareCircle[]    @relation("CircleCreator")
+  assignedTasks      Task[]          @relation("TaskAssignee")
+  createdTasks       Task[]          @relation("TaskCreator")
+  completedTasks     Task[]          @relation("TaskCompleter")
+  activityEvents     ActivityEvent[] @relation("ActivityActor")
+  createdInvites     CircleInvite[]  @relation("InviteCreator")
+  uploadedDocuments  Document[]      @relation("DocumentUploader")
+  createdSchedules   Schedule[]      @relation("ScheduleCreator")
+  companionSchedules Schedule[]      @relation("ScheduleCompanion")
+  assignedChecklist  ChecklistItem[] @relation("ChecklistAssignee")
+  completedChecklist ChecklistItem[] @relation("ChecklistCompleter")
+  createdNotes       Note[]          @relation("NoteCreator")
+}
+
+model Session {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  expiresAt DateTime
+  token     String   @unique @db.VarChar(191)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?  @db.VarChar(191)
+  userAgent String?  @db.Text
+  userId    String   @db.VarChar(191)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid()) @db.VarChar(191)
+  accountId             String    @db.VarChar(191)
+  providerId            String    @db.VarChar(191)
+  userId                String    @db.VarChar(191)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String    @id @default(cuid()) @db.VarChar(191)
+  identifier String    @db.VarChar(191)
+  value      String    @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+}
+
+model CareCircle {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  name        String   @db.VarChar(120)
+  createdById String   @db.VarChar(191)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy      User            @relation("CircleCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  members        CircleMember[]
+  tasks          Task[]
+  events         ActivityEvent[]
+  invites        CircleInvite[]
+  documents      Document[]
+  schedules      Schedule[]
+  checklistItems ChecklistItem[]
+  notes          Note[]
+
+  @@index([createdById])
+}
+
+model CircleMember {
+  id        String     @id @default(cuid()) @db.VarChar(191)
+  circleId  String     @db.VarChar(191)
+  userId    String     @db.VarChar(191)
+  role      CircleRole @default(MEMBER)
+  joinedAt  DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  circle CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([circleId, userId])
+  @@index([userId])
+  @@index([circleId, role])
+}
+
+model CircleInvite {
+  id          String    @id @default(cuid()) @db.VarChar(191)
+  circleId    String    @db.VarChar(191)
+  codeHash    String    @unique @db.Char(64)
+  createdById String    @db.VarChar(191)
+  expiresAt   DateTime
+  maxUses     Int       @default(10)
+  useCount    Int       @default(0)
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  circle    CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("InviteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([circleId, createdAt])
+  @@index([createdById])
+}
+
+model Task {
+  id            String       @id @default(cuid()) @db.VarChar(191)
+  circleId      String       @db.VarChar(191)
+  title         String       @db.VarChar(120)
+  description   String?      @db.Text
+  assigneeId    String?      @db.VarChar(191)
+  createdById   String       @db.VarChar(191)
+  status        TaskStatus   @default(OPEN)
+  priority      TaskPriority @default(NORMAL)
+  dueAt         DateTime?
+  completedAt   DateTime?
+  completedById String?      @db.VarChar(191)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  circle      CareCircle      @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  assignedTo  User?           @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy   User            @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  completedBy User?           @relation("TaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  events      ActivityEvent[]
+
+  @@index([circleId, status, dueAt])
+  @@index([circleId, priority])
+  @@index([assigneeId, status, dueAt])
+  @@index([createdById])
+  @@index([completedById])
+}
+
+model Document {
+  id           String   @id @default(cuid()) @db.VarChar(191)
+  circleId     String   @db.VarChar(191)
+  title        String   @db.VarChar(191)
+  category     String   @db.VarChar(80)
+  originalName String   @db.VarChar(255)
+  objectKey    String   @unique @db.VarChar(191)
+  mimeType     String   @db.VarChar(191)
+  sizeBytes    Int
+  note         String?  @db.Text
+  uploaderId   String   @db.VarChar(191)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  circle   CareCircle      @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  uploader User            @relation("DocumentUploader", fields: [uploaderId], references: [id], onDelete: Restrict)
+  events   ActivityEvent[]
+
+  @@index([circleId, category, createdAt])
+  @@index([uploaderId])
+}
+
+model Schedule {
+  id              String    @id @default(cuid()) @db.VarChar(191)
+  circleId        String    @db.VarChar(191)
+  title           String    @db.VarChar(120)
+  description     String?   @db.Text
+  locationName    String?   @db.VarChar(191)
+  startsAt        DateTime
+  endsAt          DateTime?
+  companionUserId String?   @db.VarChar(191)
+  createdById     String    @db.VarChar(191)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  circle    CareCircle      @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  companion User?           @relation("ScheduleCompanion", fields: [companionUserId], references: [id], onDelete: SetNull)
+  createdBy User            @relation("ScheduleCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  checklist ChecklistItem[]
+  notes     Note[]
+  events    ActivityEvent[]
+
+  @@index([circleId, startsAt])
+  @@index([companionUserId])
+  @@index([createdById])
+}
+
+model ChecklistItem {
+  id            String    @id @default(cuid()) @db.VarChar(191)
+  circleId      String    @db.VarChar(191)
+  scheduleId    String    @db.VarChar(191)
+  label         String    @db.VarChar(160)
+  assignedToId  String?   @db.VarChar(191)
+  position      Int       @default(0)
+  completedAt   DateTime?
+  completedById String?   @db.VarChar(191)
+  createdAt     DateTime  @default(now())
+
+  circle      CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  schedule    Schedule   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  assignedTo  User?      @relation("ChecklistAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  completedBy User?      @relation("ChecklistCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([circleId, scheduleId, position])
+  @@index([assignedToId])
+}
+
+model Note {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  circleId    String   @db.VarChar(191)
+  body        String   @db.Text
+  scheduleId  String?  @db.VarChar(191)
+  isPinned    Boolean  @default(false)
+  createdById String   @db.VarChar(191)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  circle    CareCircle      @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  schedule  Schedule?       @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  createdBy User            @relation("NoteCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  events    ActivityEvent[]
+
+  @@index([circleId, isPinned, createdAt])
+  @@index([scheduleId])
+  @@index([createdById])
+}
+
+model ActivityEvent {
+  id         String   @id @default(cuid()) @db.VarChar(191)
+  circleId   String   @db.VarChar(191)
+  actorId    String?  @db.VarChar(191)
+  taskId     String?  @db.VarChar(191)
+  documentId String?  @db.VarChar(191)
+  scheduleId String?  @db.VarChar(191)
+  noteId     String?  @db.VarChar(191)
+  type       String   @db.VarChar(80)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  circle   CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  actor    User?      @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  task     Task?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  document Document?  @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  schedule Schedule?  @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  note     Note?      @relation(fields: [noteId], references: [id], onDelete: SetNull)
+
+  @@index([circleId, createdAt])
+  @@index([circleId, type, createdAt])
+  @@index([actorId])
+  @@index([taskId])
+  @@index([documentId])
+  @@index([scheduleId])
+  @@index([noteId])
+}

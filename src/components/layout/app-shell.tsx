@@ -27,7 +27,7 @@ export function AppShell({ children, circleName, displayName }: { children: Reac
       <form action={signOut}><button className="nav-button" type="submit"><LogOut size={20} />Keluar</button></form>
     </aside>
     <div className="app-column">
-      <header className="app-header"><div className="mobile-brand"><Logo compact /><strong>{circleName}</strong></div><div className="profile"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><span className="avatar" aria-hidden="true">{displayName.slice(0, 1).toUpperCase()}</span><span>{displayName}</span></div></header>
+      <header className="app-header"><div className="mobile-brand"><Logo compact /><strong>{circleName}</strong></div><div className="profile"><button className="icon-button" aria-label="Notifikasi"><Bell size={20} /></button><Link href="/account" className="flex items-center gap-3 rounded-xl" aria-label="Kelola akun"><span className="avatar" aria-hidden="true">{displayName.slice(0, 1).toUpperCase()}</span><span className="hidden min-[701px]:inline">{displayName}</span></Link></div></header>
       <main className="app-main">{children}</main>
     </div>
     <nav className="bottom-nav" aria-label="Navigasi utama seluler">{items.map(({ href, label, icon: Icon, available }) => available

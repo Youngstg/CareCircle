@@ -49,7 +49,7 @@ The main use case may happen from a phone while family members are moving. Deskt
 
 ### Logo concept
 
-Use a simple abstract mark made from three soft overlapping arcs or people forming a circle. Do not use a medical cross, heart monitor line, hospital building, or caduceus symbol.
+The shared logo uses three overlapping circles to represent shared family responsibility, keeping the CareCircle wordmark and forest-green identity. The source asset is `public/brand/carecircle-mark.svg`; `src/app/icon.svg`, `favicon.ico`, and `apple-icon.png` use the same mark. Do not use a medical cross, heart monitor line, hospital building, or caduceus symbol.
 
 ### Color palette
 
@@ -135,29 +135,32 @@ Primary destinations:
 
 ### 5.1 Public landing page
 
-Purpose: explain the problem and invite users into the demo.
+Purpose: explain family coordination and invite users to create an account.
 
 Sections:
 
-- simple navigation with logo and `Coba Demo`;
-- hero with the product promise and one focused product mockup;
-- problem statement: fragmented information across chats and memory;
-- three benefits: responsibilities, preparation, shared visibility;
-- privacy/non-medical explanation;
-- final CTA;
-- minimal footer.
+- shared logo, existing `Cara kerja` and `Privasi` links, and `Masuk` / `Buat akun`;
+- split hero with the existing brand promise and genuine family photography;
+- a separate reassurance strip describing the product, without fabricated customer metrics;
+- asymmetric benefits layout: responsibilities, preparation, and shared documents;
+- privacy explanation with the non-medical disclaimer;
+- final account CTA and minimal footer.
 
-Suggested hero copy:
+Hero copy:
 
-> **Koordinasi keluarga dalam satu ruang yang tenang.**  
-> Atur jadwal, bagi tugas, dan siapkan kebutuhan bersama tanpa mencari ulang informasi di banyak percakapan.
+> **Merawat bersama, lebih terarah.**
+> Atur jadwal, bagi tugas, dan simpan informasi penting. Lebih sedikit mencari, lebih banyak waktu untuk keluarga.
 
-Primary CTA: `Coba Demo`  
-Secondary CTA: `Pelajari Cara Kerjanya`
+Primary CTA: `Buat akun` (`/sign-up`), consistently named across the page.
+Secondary CTA: `Cara kerja` (`#cara-kerja`). The `#privasi` anchor and existing routes remain unchanged.
+
+The public redesign is scoped to `src/app/page.module.css` and the authentication CSS module, keeping dashboard styles and interactions unchanged. Both public surfaces follow the system light/dark preference. Use forest-green accents, Geist, 16 px photo/panel corners, and 11 px controls. Hover/pressed feedback is restrained and respects reduced motion; there are no automatic looping effects.
+
+All multi-column layouts collapse on phones. Navigation remains accessible without JavaScript, the main content has a keyboard skip link, and image areas reserve their dimensions. Real photographs are optimized local WebP files rendered with `next/image`; sources and license caveats are in `docs/visual-assets.md`. Do not imply the pictured people are CareCircle customers.
 
 ### 5.2 Authentication and onboarding
 
-Keep the form narrow and distraction-free.
+Keep the form narrow and distraction-free. Sign-in and sign-up share a photo-led desktop layout, with the photo panel hidden below 900 px so the form remains the priority. Existing form fields, actions, validation, error/pending states, and the non-medical disclaimer are preserved. System dark mode applies to the entire authentication layout.
 
 Steps:
 

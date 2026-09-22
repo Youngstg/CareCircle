@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { googleAuthEnabled } from "@/lib/auth";
 import { signIn, signUp } from "./actions";
+import { GoogleAuthButton } from "./google-auth-button";
 
 type Props = {
   mode: "sign-in" | "sign-up";
@@ -18,6 +20,7 @@ export function AuthForm({ mode, error, success }: Props) {
       <p>{isSignUp ? "Mulai ruang privat untuk keluarga Anda." : "Masuk untuk melihat tanggung jawab bersama."}</p>
       {error && <div className="alert alert-error" role="alert"><CircleAlert size={18} />{error}</div>}
       {success && <div className="alert alert-success" role="status"><CircleCheck size={18} />{success}</div>}
+      <GoogleAuthButton enabled={googleAuthEnabled} />
       <form action={isSignUp ? signUp : signIn} className="form-stack">
         {isSignUp && <label>Nama tampilan<input name="displayName" autoComplete="name" required minLength={2} maxLength={100} /></label>}
         <label>Email<input name="email" type="email" autoComplete="email" required /></label>

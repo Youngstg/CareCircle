@@ -1,7 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedRoutes = ["/dashboard", "/tasks", "/schedule", "/notes", "/documents", "/members", "/onboarding", "/join"];
+const protectedRoutes = ["/dashboard", "/tasks", "/schedule", "/notes", "/documents", "/members", "/onboarding", "/join", "/account"];
 const authRoutes = ["/sign-in", "/sign-up"];
 
 function matchesRoute(pathname: string, routes: readonly string[]) {
@@ -27,5 +27,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/tasks/:path*", "/schedule/:path*", "/notes/:path*", "/documents/:path*", "/members/:path*", "/onboarding/:path*", "/join/:path*", "/sign-in", "/sign-up"],
+  matcher: ["/dashboard/:path*", "/tasks/:path*", "/schedule/:path*", "/notes/:path*", "/documents/:path*", "/members/:path*", "/onboarding/:path*", "/join/:path*", "/account/:path*", "/sign-in", "/sign-up"],
 };

@@ -1,0 +1,78 @@
+.details {
+  display: grid;
+  gap: 18px;
+  margin: 0 0 28px;
+  padding: 20px;
+  border: 1px solid var(--auth-border);
+  border-radius: 16px;
+  background: var(--auth-input);
+}
+
+.details dt {
+  margin-bottom: 4px;
+  color: var(--auth-muted);
+  font-size: 0.875rem;
+}
+
+.details dd {
+  margin: 0;
+  color: var(--auth-text);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.connection h2 {
+  margin-bottom: 12px;
+  color: var(--auth-text);
+  font-size: 1.25rem;
+}
+
+.connection p {
+  color: var(--auth-muted);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.connection .connected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--auth-success-border);
+  border-radius: 11px;
+  background: var(--auth-success-background);
+  color: var(--auth-success-text);
+}
+
+.connected svg {
+  flex-shrink: 0;
+}
+
+.connection .notice {
+  margin: 20px 0 0;
+  font-size: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-block: 28px;
+}
+
+.actions :global(.button-secondary) {
+  border-color: var(--auth-input-border);
+  background: var(--auth-input);
+  color: var(--auth-text);
+  font-size: 0.875rem;
+}
+
+.actions :global(.button-secondary):hover {
+  background: var(--auth-panel);
+}
+
+.actions :global(.button-secondary):focus-visible {
+  outline: 2px solid var(--auth-primary);
+  outline-offset: 4px;
+}

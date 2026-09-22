@@ -18,6 +18,14 @@ npm run prisma:generate
 
 Simpan konfigurasi lokal di `.env.local` dan konfigurasi Compose di `.env`. Jangan commit file tersebut dan jangan gunakan awalan `NEXT_PUBLIC_` untuk secret.
 
+## Login Google (opsional)
+
+Ikuti [panduan login Google](docs/google-sign-in.md) untuk membuat OAuth client **Web application**, mengatur consent screen/test users, menautkan akun lama, dan menguji deployment. Fitur ini hanya untuk login, bukan integrasi pengiriman email, reminder, atau Calendar.
+
+- Atur `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` pada runtime server melalui `.env.local`, `.env` Compose, atau UI environment penyedia hosting; jangan gunakan `NEXT_PUBLIC_` atau build arguments.
+- `BETTER_AUTH_URL` berisi origin saja, lokal `http://localhost:3000`, tanpa `/api/auth`. Daftarkan callback `http://localhost:3000/api/auth/callback/google`; production memakai origin HTTPS milik Anda dengan path yang sama. Pertahankan `BETTER_AUTH_SECRET` yang sudah ada, acak minimal 32 karakter dan tetap rahasia di server.
+- Restart/redeploy runtime setelah konfigurasi. Credential Google kosong/parsial menonaktifkan tombol Google; login akun dengan kata sandi valid tetap tersedia jika konfigurasi inti auth/database valid. Keberhasilan OAuth live perlu diuji dengan credential dan akun Google nyata sesuai matriks pada panduan.
+
 ## Laragon (Windows)
 
 1. Jalankan MySQL dari Laragon.

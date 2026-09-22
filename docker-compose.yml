@@ -70,6 +70,8 @@ services:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       MINIO_ENDPOINT: http://minio:9000
       MINIO_REGION: ${MINIO_REGION:-us-east-1}
       MINIO_BUCKET: ${MINIO_BUCKET:-carecircle-documents}
@@ -93,6 +95,7 @@ services:
       start_period: 30s
     networks:
       - backend
+      - app-egress
 
 volumes:
   mysql_data:
@@ -102,3 +105,4 @@ networks:
   backend:
     internal: true
   storage-access:
+  app-egress:

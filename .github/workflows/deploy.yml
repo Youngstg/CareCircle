@@ -1,0 +1,72 @@
+name: Deploy CareCircle to Tencent Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy CareCircle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "mysql://placeholder:placeholder@localhost:3306/db"
+
+      - name: Build Next.js App
+        run: npx next build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          DATABASE_URL: "mysql://placeholder:placeholder@localhost:3306/db"
+          BETTER_AUTH_SECRET: "placeholder_secret_for_nextjs_build_at_least_32_characters"
+          BETTER_AUTH_URL: "http://localhost:3000"
+          MINIO_ENDPOINT: "http://127.0.0.1:9000"
+          MINIO_ACCESS_KEY: "placeholder"
+          MINIO_SECRET_KEY: "placeholder"
+          MINIO_BUCKET: "carecircle-documents"
+          MINIO_USE_SSL: "false"
+
+      - name: Deploy to Tencent Cloud Server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          echo "Ensuring remote directory exists..."
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "mkdir -p /var/www/carecircle"
+
+          echo "Syncing build files to server..."
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete .next/ "$SERVER_USER@$SERVER_IP:/var/www/carecircle/.next/"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" public/ "$SERVER_USER@$SERVER_IP:/var/www/carecircle/public/"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" prisma/ "$SERVER_USER@$SERVER_IP:/var/www/carecircle/prisma/"
+          scp -o StrictHostKeyChecking=no package.json package-lock.json "$SERVER_USER@$SERVER_IP:/var/www/carecircle/"
+
+          echo "Installing production dependencies, applying DB migrations & restarting PM2..."
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
+            cd /var/www/carecircle &&
+            npm ci --omit=dev --prefer-offline &&
+            npx prisma generate &&
+            npx prisma migrate deploy &&
+            (pm2 describe carecircle > /dev/null 2>&1 && pm2 restart carecircle --update-env || PORT=3000 pm2 start npm --name carecircle -- start -- -p 3000) &&
+            pm2 save
+          "
+          echo "✅ CareCircle successfully deployed!"

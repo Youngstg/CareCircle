@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/auth/", "/(app)/"],
       },
     ],
-    sitemap: "https://carecircle.mooo.com/sitemap.xml",
+    sitemap: "https://carecircle.us.ci/sitemap.xml",
   };
 }

@@ -5,7 +5,7 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://carecircle.mooo.com"),
+  metadataBase: new URL("https://carecircle.us.ci"),
   title: {
     default: "CareCircle — Platform Kolaborasi Perawatan Keluarga & Lansia",
     template: "%s | CareCircle",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://carecircle.mooo.com",
+    url: "https://carecircle.us.ci",
     title: "CareCircle — Platform Kolaborasi Perawatan Keluarga & Lansia",
     description:
       "Ruang privat terpercaya untuk keluarga berbagi tugas pengasuhan, jadwal obat harian, log perkembangan kesehatan lansia, dan dokumen medis penting bersama caregiver.",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     images: ["/images/family-together.webp"],
   },
   alternates: {
-    canonical: "https://carecircle.mooo.com",
+    canonical: "https://carecircle.us.ci",
   },
 };
 

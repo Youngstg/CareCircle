@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  🌐 <strong>Live Demo:</strong> <a href="https://carecircle.mooo.com" target="_blank">https://carecircle.mooo.com</a>
+  🌐 <strong>Live Demo:</strong> <a href="https://carecircle.us.ci" target="_blank">https://carecircle.us.ci</a>
 </p>
 
 ---

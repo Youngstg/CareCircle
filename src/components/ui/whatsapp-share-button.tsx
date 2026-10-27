@@ -8,11 +8,13 @@ export function WhatsAppShareButton({
   nextAgenda,
   openTasksCount,
   topTasks,
+  routinesCount,
 }: {
   circleName: string;
   nextAgenda?: { title: string; time: string; location?: string | null };
   openTasksCount: number;
   topTasks?: { title: string; assignee?: string | null }[];
+  routinesCount?: { completed: number; total: number };
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -30,6 +32,10 @@ export function WhatsAppShareButton({
   if (nextAgenda) {
     summaryText += `🗓️ *Agenda Terdekat:*\n`;
     summaryText += `• ${nextAgenda.title}\n  Waktu: ${nextAgenda.time}${nextAgenda.location ? `\n  Lokasi: ${nextAgenda.location}` : ""}\n\n`;
+  }
+
+  if (routinesCount && routinesCount.total > 0) {
+    summaryText += `💊 *Rutinitas & Obat:* ${routinesCount.completed} dari ${routinesCount.total} selesai\n\n`;
   }
 
   summaryText += `📋 *Status Tugas:* ${openTasksCount} tugas belum selesai\n`;

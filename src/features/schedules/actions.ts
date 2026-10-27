@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import type { ActionResult } from "@/types/domain";
-import { checklistMutationSchema, scheduleMutationSchema, scheduleSchema } from "./schemas";
+import { checklistMutationSchema, scheduleMutationSchema, scheduleSchema, updateScheduleSchema } from "./schemas";
 
 async function membership(circleId: string, userId: string) {
   return prisma.circleMember.findUnique({ where: { circleId_userId: { circleId, userId } }, select: { role: true } });
@@ -39,6 +39,40 @@ export async function createSchedule(_previous: ActionResult, formData: FormData
     });
   } catch { return { ok: false, code: "CREATE_FAILED", message: "Jadwal belum dapat disimpan. Coba lagi." }; }
   revalidatePath("/schedule"); revalidatePath("/dashboard");
+  return { ok: true, data: undefined };
+}
+
+export async function updateSchedule(_previous: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = updateScheduleSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, code: "VALIDATION_ERROR", message: "Periksa kembali data jadwal.", fieldErrors: parsed.error.flatten().fieldErrors };
+  const session = await getSession();
+  if (!session) return { ok: false, code: "UNAUTHENTICATED", message: "Sesi Anda berakhir." };
+  if (!await membership(parsed.data.circleId, session.user.id)) return { ok: false, code: "FORBIDDEN", message: "Anda tidak memiliki akses ke Care Circle ini." };
+
+  const { scheduleId, circleId, companionUserId, startsAt, endsAt, description, locationName, title } = parsed.data;
+  if (companionUserId && !await membership(circleId, companionUserId)) return { ok: false, code: "INVALID_COMPANION", message: "Pendamping harus merupakan anggota Care Circle." };
+
+  try {
+    const existing = await prisma.schedule.findFirst({ where: { id: scheduleId, circleId }, select: { id: true, createdById: true } });
+    if (!existing) return { ok: false, code: "NOT_FOUND", message: "Jadwal tidak ditemukan." };
+
+    await prisma.schedule.update({
+      where: { id: scheduleId },
+      data: {
+        title,
+        description: description || null,
+        locationName: locationName || null,
+        startsAt: new Date(startsAt),
+        endsAt: endsAt ? new Date(endsAt) : null,
+        companionUserId: companionUserId || null,
+      },
+    });
+  } catch {
+    return { ok: false, code: "UPDATE_FAILED", message: "Gagal memperbarui jadwal." };
+  }
+
+  revalidatePath("/schedule");
+  revalidatePath("/dashboard");
   return { ok: true, data: undefined };
 }
 

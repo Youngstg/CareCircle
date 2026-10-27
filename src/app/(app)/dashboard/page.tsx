@@ -4,6 +4,8 @@ import { WhatsAppShareButton } from "@/components/ui/whatsapp-share-button";
 import { listRecentActivities } from "@/features/activities/queries";
 import { getCircleContext } from "@/features/circles/queries";
 import { listContacts } from "@/features/contacts/queries";
+import { RoutinesSection } from "@/features/routines/components/routines-section";
+import { getTodayDateStr, listRoutines } from "@/features/routines/queries";
 import { listSchedules } from "@/features/schedules/queries";
 import { TaskRow } from "@/features/tasks/components/task-row";
 import { listTasks } from "@/features/tasks/queries";
@@ -21,11 +23,14 @@ export default async function DashboardPage({
   searchParams: Promise<{ welcome?: string; joined?: string }>;
 }) {
   const context = await getCircleContext();
-  const [tasks, activities, schedules, contacts] = await Promise.all([
+  const todayDateStr = getTodayDateStr();
+
+  const [tasks, activities, schedules, contacts, routines] = await Promise.all([
     listTasks(context.circleId, context.members),
     listRecentActivities(context.circleId),
     listSchedules(context.circleId),
     listContacts(context.circleId).catch(() => []),
+    listRoutines(context.circleId, todayDateStr).catch(() => []),
   ]);
 
   const open = tasks.filter((task) => !task.completedAt).slice(0, 3);
@@ -40,6 +45,8 @@ export default async function DashboardPage({
   const emergencyContacts = contacts
     .filter((c) => c.role.includes("UGD") || c.role.includes("Ambulans") || c.role.includes("Dokter"))
     .slice(0, 2);
+
+  const completedRoutines = routines.filter((r) => r.isCompleted).length;
 
   return (
     <>
@@ -76,6 +83,7 @@ export default async function DashboardPage({
             }
             openTasksCount={tasks.filter((t) => !t.completedAt).length}
             topTasks={open.map((t) => ({ title: t.title, assignee: t.assigneeName }))}
+            routinesCount={{ completed: completedRoutines, total: routines.length }}
           />
           <Link className="button button-primary" href="/tasks">
             <Plus size={18} />
@@ -83,6 +91,14 @@ export default async function DashboardPage({
           </Link>
         </div>
       </header>
+
+      {/* Routines & Medication Daily Checklist */}
+      <RoutinesSection
+        routines={routines}
+        circleId={context.circleId}
+        dateStr={todayDateStr}
+        canManage={context.role === "OWNER" || context.role === "COORDINATOR"}
+      />
 
       <section className="next-agenda" id="jadwal" aria-labelledby="agenda-title">
         <span className="feature-icon">

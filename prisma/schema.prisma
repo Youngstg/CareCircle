@@ -52,6 +52,8 @@ model User {
   completedChecklist ChecklistItem[] @relation("ChecklistCompleter")
   createdNotes       Note[]          @relation("NoteCreator")
   createdContacts    CareContact[]   @relation("ContactCreator")
+  createdRoutines    DailyRoutine[]  @relation("RoutineCreator")
+  completedRoutines  RoutineLog[]    @relation("RoutineCompleter")
 }
 
 model Session {
@@ -115,6 +117,7 @@ model CareCircle {
   checklistItems ChecklistItem[]
   notes          Note[]
   contacts       CareContact[]
+  routines       DailyRoutine[]
 
   @@index([createdById])
 }
@@ -314,4 +317,47 @@ model CareContact {
 
   @@index([circleId, role])
   @@index([createdById])
+}
+
+enum RoutineTimeOfDay {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+}
+
+model DailyRoutine {
+  id          String           @id @default(cuid()) @db.VarChar(191)
+  circleId    String           @db.VarChar(191)
+  title       String           @db.VarChar(120)
+  category    String           @default("MEDICATION") @db.VarChar(50)
+  timeOfDay   RoutineTimeOfDay @default(MORNING)
+  customTime  String?          @db.VarChar(20)
+  note        String?          @db.Text
+  createdById String           @db.VarChar(191)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  circle    CareCircle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  createdBy User         @relation("RoutineCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  logs      RoutineLog[]
+
+  @@index([circleId, timeOfDay])
+  @@index([createdById])
+}
+
+model RoutineLog {
+  id            String   @id @default(cuid()) @db.VarChar(191)
+  routineId     String   @db.VarChar(191)
+  dateStr       String   @db.VarChar(10)
+  completedAt   DateTime @default(now())
+  completedById String   @db.VarChar(191)
+  note          String?  @db.Text
+
+  routine     DailyRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  completedBy User         @relation("RoutineCompleter", fields: [completedById], references: [id], onDelete: Restrict)
+
+  @@unique([routineId, dateStr])
+  @@index([routineId, dateStr])
+  @@index([completedById])
 }

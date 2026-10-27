@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Clock, Pill, Trash2 } from "lucide-react";
+import { Check, Clock, Trash2 } from "lucide-react";
 import { deleteRoutine, toggleRoutineToday } from "../actions";
 import type { DailyRoutineItem } from "../queries";
 

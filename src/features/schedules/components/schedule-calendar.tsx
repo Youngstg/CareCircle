@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, UserRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, MapPin, UserRound } from "lucide-react";
 
 type CalendarSchedule = {
   id: string;

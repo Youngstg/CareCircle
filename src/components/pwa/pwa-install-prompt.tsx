@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Download, Smartphone, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -8,11 +8,17 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const emptySubscribe = () => () => {};
+
 export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [isIos, setIsIos] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+
+  const isIos = useSyncExternalStore(
+    emptySubscribe,
+    () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()),
+    () => false
+  );
 
   useEffect(() => {
     // 1. Register service worker
@@ -27,13 +33,7 @@ export function PwaInstallPrompt() {
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
-    setIsStandalone(inStandalone);
     if (inStandalone) return;
-
-    // 3. Detect iOS device
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIos(isIosDevice);
 
     // 4. Capture BeforeInstallPrompt on Android/Desktop
     const handleBeforeInstall = (e: Event) => {
@@ -53,7 +53,7 @@ export function PwaInstallPrompt() {
     };
   }, []);
 
-  if (isStandalone || !showBanner) return null;
+  if (!showBanner) return null;
 
   async function handleInstall() {
     if (deferredPrompt) {

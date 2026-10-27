@@ -1,4 +1,4 @@
-import { CheckCircle2, Pill } from "lucide-react";
+import { Pill } from "lucide-react";
 import type { DailyRoutineItem } from "../queries";
 import { RoutineCreate } from "./routine-create";
 import { RoutineRow } from "./routine-row";

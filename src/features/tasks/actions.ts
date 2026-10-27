@@ -6,14 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import type { ActionResult } from "@/types/domain";
-import { taskSchema } from "./schemas";
-
-const databaseIdSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(191)
-  .regex(/^[A-Za-z0-9_-]+$/);
+import { deleteTaskSchema, databaseIdSchema, taskSchema, updateTaskSchema } from "./schemas";
 
 const toggleTaskSchema = z.object({
   taskId: databaseIdSchema,
@@ -70,6 +63,84 @@ export async function createTask(_previous: ActionResult, formData: FormData): P
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
   return { ok: true, data: undefined };
+}
+
+export async function updateTask(_previous: ActionResult, formData: FormData): Promise<ActionResult> {
+  const parsed = updateTaskSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { ok: false, code: "VALIDATION_ERROR", message: "Periksa kembali data tugas.", fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+  const session = await getSession();
+  if (!session) return { ok: false, code: "UNAUTHENTICATED", message: "Sesi Anda berakhir. Silakan masuk kembali." };
+
+  const { taskId, circleId, assignedTo, dueAt, description, ...input } = parsed.data;
+  try {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const [membership, assignee, task] = await Promise.all([
+        tx.circleMember.findFirst({ where: { circleId, userId: session.user.id }, select: { id: true, role: true } }),
+        tx.circleMember.findFirst({ where: { circleId, userId: assignedTo }, select: { id: true } }),
+        tx.task.findFirst({ where: { id: taskId, circleId }, select: { id: true, assigneeId: true, createdById: true } }),
+      ]);
+      if (!membership) return "FORBIDDEN" as const;
+      if (!assignee) return "INVALID_ASSIGNEE" as const;
+      if (!task) return "NOT_FOUND" as const;
+
+      const canUpdate = task.assigneeId === session.user.id
+        || task.createdById === session.user.id
+        || membership.role === "OWNER"
+        || membership.role === "COORDINATOR";
+      if (!canUpdate) return "FORBIDDEN" as const;
+
+      await tx.task.update({
+        where: { id: taskId },
+        data: {
+          ...input,
+          description: description || null,
+          priority: input.priority === "important" ? "HIGH" : "NORMAL",
+          assigneeId: assignedTo,
+          dueAt: dueAt ? new Date(`${dueAt}T12:00:00`) : null,
+        },
+      });
+      return "UPDATED" as const;
+    });
+    if (result === "FORBIDDEN") return { ok: false, code: result, message: "Anda tidak memiliki akses untuk mengubah tugas ini." };
+    if (result === "INVALID_ASSIGNEE") return { ok: false, code: result, message: "Anggota yang dipilih tidak tersedia." };
+    if (result === "NOT_FOUND") return { ok: false, code: result, message: "Tugas tidak ditemukan." };
+  } catch {
+    return { ok: false, code: "UPDATE_FAILED", message: "Tugas belum dapat diperbarui. Coba lagi." };
+  }
+
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return { ok: true, data: undefined };
+}
+
+export async function deleteTask(formData: FormData) {
+  const parsed = deleteTaskSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return;
+
+  const session = await getSession();
+  if (!session) return;
+
+  const member = await prisma.circleMember.findFirst({
+    where: { circleId: parsed.data.circleId, userId: session.user.id },
+    select: { role: true },
+  });
+  const task = await prisma.task.findFirst({
+    where: { id: parsed.data.taskId, circleId: parsed.data.circleId },
+    select: { createdById: true, assigneeId: true },
+  });
+
+  if (!member || !task) return;
+  const canDelete = task.createdById === session.user.id
+    || task.assigneeId === session.user.id
+    || member.role === "OWNER"
+    || member.role === "COORDINATOR";
+  if (!canDelete) return;
+
+  await prisma.task.delete({ where: { id: parsed.data.taskId } });
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 }
 
 export async function toggleTask(taskId: string, circleId: string, completed: boolean): Promise<ActionResult> {

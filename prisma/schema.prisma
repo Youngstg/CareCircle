@@ -51,6 +51,7 @@ model User {
   assignedChecklist  ChecklistItem[] @relation("ChecklistAssignee")
   completedChecklist ChecklistItem[] @relation("ChecklistCompleter")
   createdNotes       Note[]          @relation("NoteCreator")
+  createdContacts    CareContact[]   @relation("ContactCreator")
 }
 
 model Session {
@@ -113,6 +114,7 @@ model CareCircle {
   schedules      Schedule[]
   checklistItems ChecklistItem[]
   notes          Note[]
+  contacts       CareContact[]
 
   @@index([createdById])
 }
@@ -292,4 +294,24 @@ model ActivityEvent {
   @@index([documentId])
   @@index([scheduleId])
   @@index([noteId])
+}
+
+model CareContact {
+  id          String   @id @default(cuid()) @db.VarChar(191)
+  circleId    String   @db.VarChar(191)
+  name        String   @db.VarChar(120)
+  role        String   @db.VarChar(80)
+  phoneNumber String   @db.VarChar(50)
+  whatsapp    String?  @db.VarChar(50)
+  address     String?  @db.VarChar(255)
+  note        String?  @db.Text
+  createdById String   @db.VarChar(191)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  circle    CareCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("ContactCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([circleId, role])
+  @@index([createdById])
 }

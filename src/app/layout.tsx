@@ -1,8 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { PwaInstallPrompt } from "@/components/pwa/pwa-install-prompt";
 import "./globals.css";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  themeColor: "#356859",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://carecircle.us.ci"),
@@ -25,6 +33,11 @@ export const metadata: Metadata = {
   authors: [{ name: "CareCircle" }],
   creator: "CareCircle",
   publisher: "CareCircle",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CareCircle",
+  },
   robots: {
     index: true,
     follow: true,
@@ -68,7 +81,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={geist.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PwaInstallPrompt />
+      </body>
     </html>
   );
 }

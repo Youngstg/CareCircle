@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://carecircle.us.ci"),
   title: {
-    default: "CareCircle — Platform Kolaborasi Perawatan Keluarga & Lansia",
+    default: "CareCircle",
     template: "%s | CareCircle",
   },
   description:
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "id_ID",
     url: "https://carecircle.us.ci",
-    title: "CareCircle — Platform Kolaborasi Perawatan Keluarga & Lansia",
+    title: "CareCircle",
     description:
       "Ruang privat terpercaya untuk keluarga berbagi tugas pengasuhan, jadwal obat harian, log perkembangan kesehatan lansia, dan dokumen medis penting bersama caregiver.",
     siteName: "CareCircle",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CareCircle — Platform Kolaborasi Perawatan Keluarga & Lansia",
+    title: "CareCircle",
     description:
       "Ruang privat terpercaya untuk keluarga berbagi tugas, jadwal obat harian, dan catatan medis lansia bersama.",
     images: ["/images/family-together.webp"],
